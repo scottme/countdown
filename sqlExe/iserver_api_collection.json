@@ -1,0 +1,334 @@
+{
+  "info": {
+    "name": "IServer API Client",
+    "description": "Auto-generated Postman collection from Python script",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Session",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://10.23.38.83:34962/api/sessions",
+          "protocol": "http",
+          "host": [
+            "10.23.38.83",
+            "34962"
+          ],
+          "path": [
+            "api",
+            "sessions"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"login\": \"administrator\",\n  \"password\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"authenticated to the server?\", function () {",
+              "    var sessionId = pm.response.json().sessionId;",
+              "    pm.environment.set(\"iserversession\", sessionId);",
+              "    console.log(\"Session ID: \" + sessionId);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Execute SQL (with tableId)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-MSTR-ISERVER-SESSION",
+            "value": "918EAA75037D79F5E459E4803773DFF2",
+            "type": "text"
+          },
+          {
+            "key": "X-MSTR-ISERVER-PROJECT-ID",
+            "value": "E59A38AB4C9B8DDEB5E445B3837534F3",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://10.23.38.83:34962/api/openSemanticLayer/sqlexecution?tableId=B431C0262CEB4E4FA2465D38AF457319",
+          "protocol": "http",
+          "host": [
+            "10.23.38.83",
+            "34962"
+          ],
+          "path": [
+            "api",
+            "openSemanticLayer",
+            "sqlexecution?tableId=B431C0262CEB4E4FA2465D38AF457319"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sqls\": \"{{encodedSqls}}\",\n  \"dbrid\": \"59D46BD9412714BE7B10778416D080F8\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const sqls = [\"DROP TABLE IF EXISTS users;\", \"CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100));\", \"INSERT INTO users (id, name, email) VALUES (1, 'Alice', 'alice@example.com');\", \"INSERT INTO users (id, name, email) VALUES (2, 'Bob', 'bob@example.com');\", \"INSERT INTO users (id, name, email) VALUES (3, 'Charlie', 'charlie@example.com');\", \"SELECT * FROM users;\"];",
+              "",
+              "const encodedSqls = sqls.map(s => btoa(unescape(encodeURIComponent(s))));",
+              "pm.collectionVariables.set(\"encodedSqls\", JSON.stringify(encodedSqls));"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let jsonData = pm.response.json();",
+              "let href = jsonData.link.href;",
+              "let parts = href.split('/');",
+              "let id = parts[parts.length - 1];",
+              "pm.collectionVariables.set(\"taskid\", id);",
+              "console.log(\"Task ID: \" + id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poll Result - Task 4F2DA465474DB2969C78D3B906122C08",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-MSTR-ISERVER-SESSION",
+            "value": "918EAA75037D79F5E459E4803773DFF2",
+            "type": "text"
+          },
+          {
+            "key": "X-MSTR-ISERVER-PROJECT-ID",
+            "value": "E59A38AB4C9B8DDEB5E445B3837534F3",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://10.23.38.83:34962/api/queues/4F2DA465474DB2969C78D3B906122C08",
+          "protocol": "http",
+          "host": [
+            "10.23.38.83",
+            "34962"
+          ],
+          "path": [
+            "api",
+            "queues",
+            "4F2DA465474DB2969C78D3B906122C08"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Check task completion\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var progress = jsonData.progress;",
+              "    var status = jsonData.status;",
+              "    ",
+              "    console.log(\"Progress: \" + progress + \"%, Status: \" + status);",
+              "    ",
+              "    if (progress === 100) {",
+              "        console.log(\"\u2713 Task completed!\");",
+              "        pm.test(\"Task completed successfully\", function () {",
+              "            pm.expect(progress).to.eql(100);",
+              "        });",
+              "    } else {",
+              "        console.log(\"\u23f3 Task still running, poll again...\");",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Execute SQL ",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-MSTR-ISERVER-SESSION",
+            "value": "918EAA75037D79F5E459E4803773DFF2",
+            "type": "text"
+          },
+          {
+            "key": "X-MSTR-ISERVER-PROJECT-ID",
+            "value": "E59A38AB4C9B8DDEB5E445B3837534F3",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://10.23.38.83:34962/api/openSemanticLayer/sqlexecution",
+          "protocol": "http",
+          "host": [
+            "10.23.38.83",
+            "34962"
+          ],
+          "path": [
+            "api",
+            "openSemanticLayer",
+            "sqlexecution"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sqls\": \"{{encodedSqls}}\",\n  \"dbrid\": \"7369CD70211A4DFBB82173AF3049781C\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const sqls = [\"SELECT * FROM B431C0262CEB4E4FA2465D38AF457319\"];",
+              "",
+              "const encodedSqls = sqls.map(s => btoa(unescape(encodeURIComponent(s))));",
+              "pm.collectionVariables.set(\"encodedSqls\", JSON.stringify(encodedSqls));"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let jsonData = pm.response.json();",
+              "let href = jsonData.link.href;",
+              "let parts = href.split('/');",
+              "let id = parts[parts.length - 1];",
+              "pm.collectionVariables.set(\"taskid\", id);",
+              "console.log(\"Task ID: \" + id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poll Result - Task 37BA047F427C063E5B9107847B429520",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-MSTR-ISERVER-SESSION",
+            "value": "918EAA75037D79F5E459E4803773DFF2",
+            "type": "text"
+          },
+          {
+            "key": "X-MSTR-ISERVER-PROJECT-ID",
+            "value": "E59A38AB4C9B8DDEB5E445B3837534F3",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://10.23.38.83:34962/api/queues/37BA047F427C063E5B9107847B429520",
+          "protocol": "http",
+          "host": [
+            "10.23.38.83",
+            "34962"
+          ],
+          "path": [
+            "api",
+            "queues",
+            "37BA047F427C063E5B9107847B429520"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Check task completion\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var progress = jsonData.progress;",
+              "    var status = jsonData.status;",
+              "    ",
+              "    console.log(\"Progress: \" + progress + \"%, Status: \" + status);",
+              "    ",
+              "    if (progress === 100) {",
+              "        console.log(\"\u2713 Task completed!\");",
+              "        pm.test(\"Task completed successfully\", function () {",
+              "            pm.expect(progress).to.eql(100);",
+              "        });",
+              "    } else {",
+              "        console.log(\"\u23f3 Task still running, poll again...\");",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "iserver",
+      "value": "10.23.38.83"
+    },
+    {
+      "key": "port",
+      "value": "34962"
+    },
+    {
+      "key": "iserversession",
+      "value": ""
+    },
+    {
+      "key": "project_id",
+      "value": "E59A38AB4C9B8DDEB5E445B3837534F3"
+    },
+    {
+      "key": "taskid",
+      "value": ""
+    }
+  ]
+}
