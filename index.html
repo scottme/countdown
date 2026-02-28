@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物品购买追踪</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 物品购买追踪</h1>
+        </header>
+
+        <!-- 添加物品表单 -->
+        <div class="add-item-section">
+            <h2>添加新物品</h2>
+            <form id="addItemForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemName">物品名称 *</label>
+                        <input type="text" id="itemName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="purchaseDate">购买时间 *</label>
+                        <input type="date" id="purchaseDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="price">价格 *</label>
+                        <input type="number" id="price" step="0.01" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">分类</label>
+                        <input type="text" id="category" placeholder="如：电子产品、家具、服饰">
+                    </div>
+                    <div class="form-group">
+                        <label for="tags">标签</label>
+                        <input type="text" id="tags" placeholder="多个标签用逗号分隔">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="status">状态 *</label>
+                        <select id="status" required>
+                            <option value="active">服役中</option>
+                            <option value="retired">已退役</option>
+                            <option value="sold">已卖出</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="soldPriceGroup" style="display: none;">
+                        <label for="soldPrice">卖出价</label>
+                        <input type="number" id="soldPrice" step="0.01" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="notes">备注</label>
+                    <textarea id="notes" rows="3" placeholder="记录相关信息..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">添加物品</button>
+            </form>
+        </div>
+
+        <!-- 筛选和排序 -->
+        <div class="controls">
+            <div class="filter-section">
+                <label>筛选状态：</label>
+                <button class="filter-btn active" data-filter="all">全部</button>
+                <button class="filter-btn" data-filter="active">服役中</button>
+                <button class="filter-btn" data-filter="retired">已退役</button>
+                <button class="filter-btn" data-filter="sold">已卖出</button>
+            </div>
+            <div class="view-switch">
+                <button class="view-btn active" data-view="list" title="列表视图">☰</button>
+                <button class="view-btn" data-view="grid" title="网格视图">▦</button>
+            </div>
+            <div class="sort-section">
+                <label for="sortBy">排序：</label>
+                <select id="sortBy">
+                    <option value="purchaseDate-desc">购买时间（新→旧）</option>
+                    <option value="purchaseDate-asc">购买时间（旧→新）</option>
+                    <option value="price-desc">价格（高→低）</option>
+                    <option value="price-asc">价格（低→高）</option>
+                    <option value="usageDays-desc">使用时间（长→短）</option>
+                    <option value="usageDays-asc">使用时间（短→长）</option>
+                </select>
+            </div>
+            <div class="export-import-section">
+                <button class="btn btn-export" onclick="exportToCSV()">📥 导出CSV</button>
+                <label class="btn btn-import" for="importFile">
+                    📤 导入CSV
+                    <input type="file" id="importFile" accept=".csv" style="display: none;">
+                </label>
+            </div>
+        </div>
+
+        <!-- 统计面板 -->
+        <div class="statistics-section">
+            <h2>📊 数据统计</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">总支出</div>
+                    <div class="stat-value" id="statTotalSpending">¥0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">物品总数</div>
+                    <div class="stat-value" id="statTotalItems">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">服役中</div>
+                    <div class="stat-value" id="statActiveItems">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">已退役</div>
+                    <div class="stat-value" id="statRetiredItems">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">已卖出</div>
+                    <div class="stat-value" id="statSoldItems">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">平均使用</div>
+                    <div class="stat-value" id="statAvgUsage">0 天</div>
+                </div>
+                <div class="stat-card profit-loss">
+                    <div class="stat-label">盈亏情况</div>
+                    <div class="stat-value" id="statProfitLoss">¥0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">最贵物品</div>
+                    <div class="stat-value stat-small" id="statMostExpensive">-</div>
+                </div>
+            </div>
+            <div class="category-breakdown" id="categoryBreakdown">
+                <!-- Category stats will be dynamically added -->
+            </div>
+        </div>
+
+        <!-- 物品列表 -->
+        <div class="items-section">
+            <h2>物品列表 <span id="itemCount">(0)</span></h2>
+            <div id="itemsList" class="items-list">
+                <!-- 物品将通过JavaScript动态添加 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑模态框 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>编辑物品</h2>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="editItemForm">
+                <input type="hidden" id="editItemId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editItemName">物品名称 *</label>
+                        <input type="text" id="editItemName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPurchaseDate">购买时间 *</label>
+                        <input type="date" id="editPurchaseDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPrice">价格 *</label>
+                        <input type="number" id="editPrice" step="0.01" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editCategory">分类</label>
+                        <input type="text" id="editCategory" placeholder="如：电子产品、家具、服饰">
+                    </div>
+                    <div class="form-group">
+                        <label for="editTags">标签</label>
+                        <input type="text" id="editTags" placeholder="多个标签用逗号分隔">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStatus">状态 *</label>
+                        <select id="editStatus" required>
+                            <option value="active">服役中</option>
+                            <option value="retired">已退役</option>
+                            <option value="sold">已卖出</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="editSoldPriceGroup" style="display: none;">
+                        <label for="editSoldPrice">卖出价</label>
+                        <input type="number" id="editSoldPrice" step="0.01" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="editNotes">备注</label>
+                    <textarea id="editNotes" rows="3" placeholder="记录相关信息..."></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-delete" onclick="deleteItemFromModal()">删除物品</button>
+                    <div class="modal-actions-right">
+                        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存修改</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

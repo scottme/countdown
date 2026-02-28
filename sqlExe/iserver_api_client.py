@@ -239,7 +239,7 @@ def main():
     client = IServerClient(ISERVER_HOST, PORT)
     
     # Choose workflow type:
-    WORKFLOW_TYPE = "sql"  # Options: "pushdown" or "sql"
+    WORKFLOW_TYPE = "pushdown"  # Options: "pushdown" or "sql"
     
     try:
         if WORKFLOW_TYPE == "pushdown":
