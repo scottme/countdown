@@ -3,6 +3,7 @@ import base64
 import time
 import uuid
 import json
+import argparse
 import pyarrow as pa
 import pyarrow.ipc as ipc
 
@@ -228,6 +229,18 @@ class IServerClient:
 
 
 def main():
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="IServer API Client - Execute SQL workflows")
+    parser.add_argument(
+        "workflow",
+        type=str,
+        nargs="?",
+        default="pushdown",
+        choices=["pushdown", "sql"],
+        help="Workflow type: 'pushdown' (default) or 'sql'"
+    )
+    args = parser.parse_args()
+    
     # Configuration
     ISERVER_HOST = "10.23.38.83"  # Change to your iServer host
     PORT = "34962"  # iserver rest api port
@@ -238,8 +251,8 @@ def main():
     # Create client
     client = IServerClient(ISERVER_HOST, PORT)
     
-    # Choose workflow type:
-    WORKFLOW_TYPE = "pushdown"  # Options: "pushdown" or "sql"
+    # Use workflow type from command-line argument
+    WORKFLOW_TYPE = args.workflow
     
     try:
         if WORKFLOW_TYPE == "pushdown":
@@ -284,6 +297,7 @@ def main():
             )
         else:
             print(f"\n❌ Unknown workflow type: {WORKFLOW_TYPE}")
+            print("Usage: py iserver_api_client.py [pushdown|sql]")
     except Exception as e:
         print(f"\n❌ Error occurred: {str(e)}")
         raise
